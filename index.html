@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football Rules — AI Situation Search</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #0b6623;
+        margin: 0;
+        padding: 0;
+    }
+
+    header {
+        background: #06551b;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-size: 30px;
+        font-weight: bold;
+        box-shadow: 0 0 10px black;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: auto;
+        background: white;
+        padding: 25px;
+        margin-top: 25px;
+        border-radius: 12px;
+        box-shadow: 0 0 15px #003d16;
+    }
+
+    #search {
+        width: 100%;
+        padding: 14px;
+        font-size: 20px;
+        border: 3px solid #0b6623;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+
+    .section-title {
+        font-size: 24px;
+        margin-bottom: 10px;
+        color: #06551b;
+    }
+
+    .result {
+        background: #e9ffe9;
+        padding: 15px;
+        border-left: 6px solid #0b6623;
+        border-radius: 8px;
+        margin-top: 20px;
+        animation: fade 0.5s;
+        display: none;
+    }
+
+    @keyframes fade {
+        from {opacity: 0;}
+        to {opacity: 1;}
+    }
+
+    .rule-card {
+        background: #f4fff4;
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 6px;
+        border-left: 5px solid #0b6623;
+    }
+
+    /* Добавлено: стиль для надписи "Сделал Анвар" */
+    .anvar {
+        text-align: center;
+        background: yellow;
+        padding: 10px;
+        font-weight: bold;
+        font-size: 20px;
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+
+<!-- Добавлено: надпись в начале -->
+<div class="anvar">Сделал Анвар</div>
+
+<header>
+    ⚽ Football Rules — AI Situation Search
+</header>
+
+<div class="container">
+
+    <h2 class="section-title">Situation Search</h2>
+
+    <input type="text" id="search" placeholder="Describe a game situation...">
+
+    <div class="result" id="aiResult">
+        <h3>📌 Detected Rule:</h3>
+        <p id="ruleText"></p>
+
+        <h3>📘 Conclusion:</h3>
+        <p id="conclusion" style="font-weight:bold;"></p>
+    </div>
+
+    <hr><br>
+
+    <h2 class="section-title">All Main Football Rules</h2>
+
+    <div id="allRules"></div>
+
+</div>
+
+<!-- Добавлено: надпись в конце -->
+<div class="anvar">Сделал Анвар</div>
+
+<script>
+
+const ruleList = [
+    {name: "Offside", text: "A player is in an offside position if, at the moment of the pass, he is closer to the opponent’s goal line than the ball and the second-last defender."},
+    {name: "Penalty", text: "Awarded for a foul committed by a defending player inside their own penalty area."},
+    {name: "Handball", text: "A foul if a player moves their hand towards the ball or makes their body unnaturally bigger."},
+    {name: "Red Card", text: "Given for serious foul play, a second yellow card, violent conduct, or denial of a goal-scoring opportunity."},
+    {name: "Yellow Card", text: "A warning for unsporting behaviour, time-wasting, or simulation."},
+    {name: "VAR", text: "VAR is used to review goals, penalties, red cards, and cases of mistaken identity."},
+    {name: "Throw-In", text: "Awarded when the ball fully crosses the touchline."},
+    {name: "Corner Kick", text: "Given when the ball crosses the goal line after last touching a defender."},
+    {name: "Indirect Free Kick", text: "Awarded for technical offences, such as the goalkeeper holding the ball for more than 6 seconds."},
+    {name: "Dangerous Play", text: "Any action that could cause injury (e.g., a high foot)."},
+    {name: "Attacking Foul", text: "Aggressive actions by an attacker against a defender — pushing, blocking, etc."},
+    {name: "Advantage", text: "The referee may allow play to continue if the attacking team retains a favourable opportunity."},
+    {name: "Goalkeeper Handling", text: "A goalkeeper cannot handle the ball if it was deliberately kicked to him by a teammate."},
+    {name: "Simulation", text: "Attempting to deceive the referee — punished with a yellow card."},
+    {name: "Time Wasting", text: "Any action intended to waste time — results in a warning."}
+];
+
+const aiRules = [
+    {
+        keywords: ["offside", "ahead", "only the goalkeeper", "scored", "pass", "moment of the pass"],
+        rule: ruleList[0].text,
+        conclusion: "The goal should not be counted — it is offside."
+    },
+    {
+        keywords: ["foul", "penalty area", "penalty", "inside the box"],
+        rule: ruleList[1].text,
+        conclusion: "A penalty must be awarded."
+    },
+    {
+        keywords: ["hand", "handball", "ball hit the hand"],
+        rule: ruleList[2].text,
+        conclusion: "This is handball — a free kick or penalty."
+    },
+    {
+        keywords: ["hit", "serious", "red", "last defender", "dangerous"],
+        rule: ruleList[3].text,
+        conclusion: "The player should receive a red card."
+    },
+    {
+        keywords: ["simulation", "dive", "pretended"],
+        rule: ruleList[14].text,
+        conclusion: "The player should receive a yellow card for simulation."
+    },
+    {
+        keywords: ["goalkeeper", "back pass", "hands", "picked up the ball"],
+        rule: ruleList[12].text,
+        conclusion: "The goalkeeper cannot handle the ball — indirect free kick."
+    },
+    {
+        keywords: ["var", "video", "review"],
+        rule: ruleList[5].text,
+        conclusion: "The situation must be checked by VAR."
+    }
+];
+
+const container = document.getElementById("allRules");
+ruleList.forEach(r => {
+    container.innerHTML += `
+        <div class="rule-card">
+            <b>${r.name}</b><br>
+            ${r.text}
+        </div>https://github.com/Anvar242/footbalrulesbyanvar/tree/main
+    `;
+});
+
+const search = document.getElementById("search");
+const aiResult = document.getElementById("aiResult");
+const ruleText = document.getElementById("ruleText");
+const conclusion = document.getElementById("conclusion");
+
+search.addEventListener("input", function() {
+    let text = search.value.toLowerCase();
+
+    if (text.length < 5) {
+        aiResult.style.display = "none";
+        return;
+    }
+
+    for (let r of aiRules) {
+        if (r.keywords.some(k => text.includes(k))) {
+            aiResult.style.display = "block";
+            ruleText.textContent = r.rule;
+            conclusion.textContent = r.conclusion;
+            return;
+        }
+    }
+
+    aiResult.style.display = "block";
+    ruleText.textContent = "No matching rule found.";
+    conclusion.textContent = "Try describing the situation in more detail.";
+});
+
+</script>
+</body>
+</html>
